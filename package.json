@@ -8,12 +8,15 @@
     "build": "next build",
     "start": "next start"
   },
-  "dependencies": {
-    "next": "^13.4.7",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
-  },
-  "devDependencies": {
+"dependencies": {
+  "next": "^13.4.7",
+  "react": "^18.2.0",
+  "react-dom": "^18.2.0",
+  "chart.js": "^4.4.0",
+  "react-chartjs-2": "^5.2.0",
+  "react-calendar": "^4.0.0"
+}
+"devDependencies": {
     "autoprefixer": "^10.4.14",
     "postcss": "^8.4.21",
     "tailwindcss": "^3.3.2"
