@@ -1,3 +1,4 @@
+// Jay BJJ Tracker with PureGym Video Demos + Workout Logging
 import { useState } from "react";
 import { Line } from "react-chartjs-2";
 import Calendar from "react-calendar";
@@ -15,12 +16,26 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
+const exerciseDemos = {
+  "Back Squats": "https://www.youtube.com/embed/ultWZbUMPL8",
+  "RDLs": "https://www.youtube.com/embed/1uDiW5--rAE",
+  "Walking Lunges": "https://www.youtube.com/embed/wrwwXE_x-pQ",
+  "Kettlebell Swings": "https://www.youtube.com/embed/YSxHifyI9QM",
+  "Core Work": "https://www.youtube.com/embed/ASdvN_XEl_c",
+  "Pull-Ups": "https://www.youtube.com/embed/eGo4IYlbE5g",
+  "Bench Press": "https://www.youtube.com/embed/4Y2ZdHCOXok",
+  "Rows": "https://www.youtube.com/embed/FWJR5Ve8bnQ",
+  "Overhead Press": "https://www.youtube.com/embed/0JfYxMRsUCQ",
+  "Farmer's Carries": "https://www.youtube.com/embed/tAW5z9puX_Q"
+};
+
 export default function BJJGymTracker() {
   const [weightEntries, setWeightEntries] = useState([]);
   const [weightInput, setWeightInput] = useState("");
   const [exerciseLogs, setExerciseLogs] = useState({});
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [trainingLog, setTrainingLog] = useState([]);
+  const [selectedDemo, setSelectedDemo] = useState(null);
 
   const handleAddWeight = () => {
     if (!weightInput) return;
@@ -50,13 +65,13 @@ export default function BJJGymTracker() {
   const renderExerciseLogger = (exercise) => {
     const [input, setInput] = useState("");
     return (
-      <div className="flex items-center space-x-2 mt-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 mt-2">
         <input
           type="number"
           placeholder="kg"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          className="border px-2 py-1 rounded w-24"
+          className="border px-2 py-1 rounded w-24 mb-2 sm:mb-0"
         />
         <button
           onClick={() => {
@@ -67,6 +82,14 @@ export default function BJJGymTracker() {
         >
           Log
         </button>
+        {exerciseDemos[exercise] && (
+          <button
+            onClick={() => setSelectedDemo(exercise)}
+            className="text-sm text-blue-600 underline mt-2 sm:mt-0"
+          >
+            ▶ Demo
+          </button>
+        )}
       </div>
     );
   };
@@ -105,6 +128,28 @@ export default function BJJGymTracker() {
       <div className="max-w-5xl mx-auto">
         <h1 className="text-4xl md:text-5xl font-extrabold mb-8 text-center tracking-tight">Jay BJJ</h1>
 
+        {selectedDemo && (
+          <div className="mb-8 bg-gray-100 p-4 rounded-xl shadow-md">
+            <h2 className="text-xl font-bold mb-2">{selectedDemo} Demo</h2>
+            <div className="aspect-w-16 aspect-h-9">
+              <iframe
+                className="w-full h-64 md:h-96"
+                src={exerciseDemos[selectedDemo]}
+                title={selectedDemo}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            </div>
+            <button
+              onClick={() => setSelectedDemo(null)}
+              className="mt-4 text-red-500 underline"
+            >
+              Close Demo
+            </button>
+          </div>
+        )}
+
         <div className="mb-12">
           <h2 className="text-2xl font-bold mb-4">Training Calendar</h2>
           <Calendar
@@ -113,7 +158,7 @@ export default function BJJGymTracker() {
               handleTrainingDay(date);
             }}
             value={selectedDate}
-            tileClassName={({ date, view }) =>
+            tileClassName={({ date }) =>
               trainingLog.includes(date.toLocaleDateString()) ? "bg-blue-100 text-blue-800 font-semibold" : null
             }
           />
