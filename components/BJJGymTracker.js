@@ -140,7 +140,7 @@ export default function BJJGymTracker() {
   };
 
   return (
-    <div className={\`\${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'} min-h-screen font-sans px-4 py-8 md:px-12\`}>
+    <div className={`${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'} min-h-screen font-sans px-4 py-8 md:px-12`}>
       <div className="max-w-5xl mx-auto">
 
         {timeLeft > 0 && (
@@ -164,7 +164,7 @@ export default function BJJGymTracker() {
           <div className="w-full bg-gray-200 rounded-full h-4">
             <div
               className="bg-green-500 h-4 rounded-full"
-              style={{ width: \`\${goalWeight && weightEntries[0] ? 100 - ((weightEntries[0].weight - goalWeight) / weightEntries[0].weight) * 100 : 0}%\` }}
+              style={{ width: `${goalWeight && weightEntries[0] ? 100 - ((weightEntries[0].weight - goalWeight) / weightEntries[0].weight) * 100 : 0}%` }}
             ></div>
           </div>
           {weightEntries[0] && (
