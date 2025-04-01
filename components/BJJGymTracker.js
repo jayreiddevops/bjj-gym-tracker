@@ -164,6 +164,35 @@ export default function BJJGymTracker() {
   return (
     <div className={`${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'} min-h-screen font-sans px-4 py-8 md:px-12`}>
       <div className="max-w-5xl mx-auto">
+
+        {timeLeft > 0 && (
+          <div className="mb-4 p-4 bg-yellow-100 text-yellow-900 rounded-lg text-center font-semibold">
+            ⏱️ Rest Time: {timeLeft} seconds remaining
+          </div>
+        )}
+
+        <div className="mb-8">
+          <h2 className="text-xl font-bold mb-2">🎯 Weight Goal Tracker</h2>
+          <div className="flex items-center space-x-4 mb-4">
+            <input
+              type="number"
+              value={goalWeight}
+              onChange={(e) => setGoalWeight(parseFloat(e.target.value))}
+              className="border px-4 py-2 rounded w-28"
+              placeholder="Goal (kg)"
+            />
+            <span className="text-sm text-gray-600">Set your target weight</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-4">
+            <div
+              className="bg-green-500 h-4 rounded-full"
+              style={{ width: `${goalWeight && weightEntries[0] ? 100 - ((weightEntries[0].weight - goalWeight) / weightEntries[0].weight) * 100 : 0}%` }}
+            ></div>
+          </div>
+          {weightEntries[0] && (
+            <p className="text-sm mt-2">Current: {weightEntries[0].weight} kg</p>
+          )}
+        </div>
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">Jay BJJ</h1>
           <button onClick={toggleDarkMode} className="text-sm bg-gray-200 px-3 py-1 rounded hover:bg-gray-300 dark:bg-gray-700 dark:text-white">Toggle Dark Mode</button>
@@ -193,7 +222,55 @@ export default function BJJGymTracker() {
           {renderTagControls(selectedDate)}
         </div>
 
-        {/* Additional UI rendering here */}
+        <div className="mt-12">
+          <h2 className="text-xl font-bold mb-2">🥋 BJJ Technique Library</h2>
+          <div className="space-y-2">
+            {bjjTechniques.map((tech, idx) => (
+              <div key={idx}>
+                <button className="text-blue-600 underline" onClick={() => setSelectedTechnique(tech)}>
+                  ▶ {tech.name}
+                </button>
+              </div>
+            ))}
+          </div>
+          {selectedTechnique && (
+            <div className="mt-4">
+              <h3 className="font-semibold mb-2">{selectedTechnique.name} Demo</h3>
+              <iframe
+                className="w-full h-64 md:h-96"
+                src={selectedTechnique.video}
+                title={selectedTechnique.name}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+              <button onClick={() => setSelectedTechnique(null)} className="mt-2 text-red-500 underline">
+                Close
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-12">
+          <h2 className="text-xl font-bold mb-2">➕ Add Custom Exercise</h2>
+          <div className="flex space-x-2 mb-2">
+            <input
+              type="text"
+              placeholder="Exercise Name"
+              value={newExercise}
+              onChange={(e) => setNewExercise(e.target.value)}
+              className="border px-4 py-2 rounded w-full"
+            />
+            <button onClick={handleAddCustomExercise} className="bg-blue-600 text-white px-4 py-2 rounded">
+              Add
+            </button>
+          </div>
+          <ul className="list-disc list-inside">
+            {customExercises.map((name, idx) => (
+              <li key={idx} className="text-sm">{name}</li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   );
