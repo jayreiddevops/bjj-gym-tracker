@@ -85,6 +85,21 @@ export default function BJJGymTracker() {
     };
   };
 
+  const generateExerciseChartData = (exercise) => {
+    const logs = (exerciseLogs[exercise] || []).reverse();
+    return {
+      labels: logs.map((log) => log.date),
+      datasets: [
+        {
+          label: `${exercise} (kg)`,
+          data: logs.map((log) => log.weight),
+          borderColor: "#3b82f6",
+          backgroundColor: "#93c5fd",
+        },
+      ],
+    };
+  };
+
   return (
     <div className="min-h-screen bg-white text-gray-800 font-sans px-4 py-8 md:px-12">
       <div className="max-w-5xl mx-auto">
@@ -160,6 +175,20 @@ export default function BJJGymTracker() {
           <div className="mt-12 bg-gray-100 p-6 rounded-2xl shadow-md">
             <h2 className="text-2xl font-bold mb-4">Progress Chart</h2>
             <Line data={generateChartData()} />
+          </div>
+        )}
+
+        {Object.keys(exerciseLogs).length > 0 && (
+          <div className="mt-12 bg-gray-100 p-6 rounded-2xl shadow-md">
+            <h2 className="text-2xl font-bold mb-6">Exercise Progress</h2>
+            <div className="grid gap-6 md:grid-cols-2">
+              {Object.keys(exerciseLogs).map((exercise, idx) => (
+                <div key={idx} className="bg-white p-4 rounded-xl shadow">
+                  <h3 className="text-lg font-semibold mb-2">{exercise}</h3>
+                  <Line data={generateExerciseChartData(exercise)} />
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
