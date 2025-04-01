@@ -31,10 +31,7 @@ const exerciseDemos = {
 const TAGS = ["BJJ", "Gym", "Mobility", "Rest"];
 
 export default function BJJGymTracker() {
-  const [customExercises, setCustomExercises] = useState(() => {
-    const saved = localStorage.getItem("customExercises");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [customExercises, setCustomExercises] = useState([]);
   const [newExercise, setNewExercise] = useState("");
   const [bjjTechniques] = useState([
     { name: "Guard Pass", video: "https://www.youtube.com/embed/4I9qDW67jrk" },
@@ -42,37 +39,17 @@ export default function BJJGymTracker() {
     { name: "Takedown Basics", video: "https://www.youtube.com/embed/Vqd7y8rdBac" }
   ]);
   const [selectedTechnique, setSelectedTechnique] = useState(null);
-  const [weightEntries, setWeightEntries] = useState(() => {
-    const saved = localStorage.getItem("weightEntries");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [weightEntries, setWeightEntries] = useState([]);
   const [weightInput, setWeightInput] = useState("");
-  const [exerciseLogs, setExerciseLogs] = useState(() => {
-    const saved = localStorage.getItem("exerciseLogs");
-    return saved ? JSON.parse(saved) : {};
-  });
+  const [exerciseLogs, setExerciseLogs] = useState({});
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [trainingLog, setTrainingLog] = useState(() => {
-    const saved = localStorage.getItem("trainingLog");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [trainingLog, setTrainingLog] = useState([]);
   const [selectedDemo, setSelectedDemo] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
   const [goalWeight, setGoalWeight] = useState(88);
   const [restTimer, setRestTimer] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
-  const [tags, setTags] = useState(() => {
-    const saved = localStorage.getItem("calendarTags");
-    return saved ? JSON.parse(saved) : {};
-  });
-
-  useEffect(() => {
-    localStorage.setItem("weightEntries", JSON.stringify(weightEntries));
-    localStorage.setItem("exerciseLogs", JSON.stringify(exerciseLogs));
-    localStorage.setItem("trainingLog", JSON.stringify(trainingLog));
-    localStorage.setItem("customExercises", JSON.stringify(customExercises));
-    localStorage.setItem("calendarTags", JSON.stringify(tags));
-  }, [weightEntries, exerciseLogs, trainingLog, customExercises, tags]);
+  const [tags, setTags] = useState({});
 
   useEffect(() => {
     if (timeLeft === 0 && restTimer) {
@@ -193,85 +170,3 @@ export default function BJJGymTracker() {
             <p className="text-sm mt-2">Current: {weightEntries[0].weight} kg</p>
           )}
         </div>
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">Jay BJJ</h1>
-          <button onClick={toggleDarkMode} className="text-sm bg-gray-200 px-3 py-1 rounded hover:bg-gray-300 dark:bg-gray-700 dark:text-white">Toggle Dark Mode</button>
-        </div>
-
-        <div className="mb-4">
-          <p className="text-sm font-medium">🔥 Weekly Streak: {streakCount()} training days</p>
-        </div>
-
-        <div className="mb-12">
-          <h2 className="text-xl font-bold mb-4">Training Calendar</h2>
-          <Calendar
-            onChange={(date) => {
-              setSelectedDate(date);
-              handleTrainingDay(date);
-            }}
-            value={selectedDate}
-            tileContent={({ date }) => {
-              const formatted = date.toLocaleDateString();
-              const tag = tags[formatted];
-              return tag ? <span className="block text-xs mt-1 text-blue-600">{tag}</span> : null;
-            }}
-            tileClassName={({ date }) =>
-              trainingLog.includes(date.toLocaleDateString()) ? "bg-blue-100 text-blue-800 font-semibold" : null
-            }
-          />
-          {renderTagControls(selectedDate)}
-        </div>
-
-        <div className="mt-12">
-          <h2 className="text-xl font-bold mb-2">🥋 BJJ Technique Library</h2>
-          <div className="space-y-2">
-            {bjjTechniques.map((tech, idx) => (
-              <div key={idx}>
-                <button className="text-blue-600 underline" onClick={() => setSelectedTechnique(tech)}>
-                  ▶ {tech.name}
-                </button>
-              </div>
-            ))}
-          </div>
-          {selectedTechnique && (
-            <div className="mt-4">
-              <h3 className="font-semibold mb-2">{selectedTechnique.name} Demo</h3>
-              <iframe
-                className="w-full h-64 md:h-96"
-                src={selectedTechnique.video}
-                title={selectedTechnique.name}
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
-              <button onClick={() => setSelectedTechnique(null)} className="mt-2 text-red-500 underline">
-                Close
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="mt-12">
-          <h2 className="text-xl font-bold mb-2">➕ Add Custom Exercise</h2>
-          <div className="flex space-x-2 mb-2">
-            <input
-              type="text"
-              placeholder="Exercise Name"
-              value={newExercise}
-              onChange={(e) => setNewExercise(e.target.value)}
-              className="border px-4 py-2 rounded w-full"
-            />
-            <button onClick={handleAddCustomExercise} className="bg-blue-600 text-white px-4 py-2 rounded">
-              Add
-            </button>
-          </div>
-          <ul className="list-disc list-inside">
-            {customExercises.map((name, idx) => (
-              <li key={idx} className="text-sm">{name}</li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    </div>
-  );
-}
