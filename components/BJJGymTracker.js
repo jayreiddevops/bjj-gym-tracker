@@ -1,5 +1,4 @@
-// Jay BJJ Tracker with PureGym Video Demos + Workout Logging
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Line } from "react-chartjs-2";
 import Calendar from "react-calendar";
 import 'react-calendar/dist/Calendar.css';
@@ -29,13 +28,58 @@ const exerciseDemos = {
   "Farmer's Carries": "https://www.youtube.com/embed/tAW5z9puX_Q"
 };
 
+const TAGS = ["BJJ", "Gym", "Mobility", "Rest"];
+
 export default function BJJGymTracker() {
-  const [weightEntries, setWeightEntries] = useState([]);
+  const [customExercises, setCustomExercises] = useState(() => {
+    const saved = localStorage.getItem("customExercises");
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [newExercise, setNewExercise] = useState("");
+  const [bjjTechniques] = useState([
+    { name: "Guard Pass", video: "https://www.youtube.com/embed/4I9qDW67jrk" },
+    { name: "Triangle Choke", video: "https://www.youtube.com/embed/Pwva2Rfd8uo" },
+    { name: "Takedown Basics", video: "https://www.youtube.com/embed/Vqd7y8rdBac" }
+  ]);
+  const [selectedTechnique, setSelectedTechnique] = useState(null);
+  const [weightEntries, setWeightEntries] = useState(() => {
+    const saved = localStorage.getItem("weightEntries");
+    return saved ? JSON.parse(saved) : [];
+  });
   const [weightInput, setWeightInput] = useState("");
-  const [exerciseLogs, setExerciseLogs] = useState({});
+  const [exerciseLogs, setExerciseLogs] = useState(() => {
+    const saved = localStorage.getItem("exerciseLogs");
+    return saved ? JSON.parse(saved) : {};
+  });
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [trainingLog, setTrainingLog] = useState([]);
+  const [trainingLog, setTrainingLog] = useState(() => {
+    const saved = localStorage.getItem("trainingLog");
+    return saved ? JSON.parse(saved) : [];
+  });
   const [selectedDemo, setSelectedDemo] = useState(null);
+  const [darkMode, setDarkMode] = useState(false);
+  const [goalWeight, setGoalWeight] = useState(88);
+  const [restTimer, setRestTimer] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [tags, setTags] = useState(() => {
+    const saved = localStorage.getItem("calendarTags");
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  useEffect(() => {
+    localStorage.setItem("weightEntries", JSON.stringify(weightEntries));
+    localStorage.setItem("exerciseLogs", JSON.stringify(exerciseLogs));
+    localStorage.setItem("trainingLog", JSON.stringify(trainingLog));
+    localStorage.setItem("customExercises", JSON.stringify(customExercises));
+    localStorage.setItem("calendarTags", JSON.stringify(tags));
+  }, [weightEntries, exerciseLogs, trainingLog, customExercises, tags]);
+
+  useEffect(() => {
+    if (timeLeft === 0 && restTimer) {
+      clearInterval(restTimer);
+      setRestTimer(null);
+    }
+  }, [timeLeft, restTimer]);
 
   const handleAddWeight = () => {
     if (!weightInput) return;
@@ -53,6 +97,7 @@ export default function BJJGymTracker() {
       ...prev,
       [exercise]: [...(prev[exercise] || []), { date, weight: parseFloat(weight) }],
     }));
+    startRestTimer(60);
   };
 
   const handleTrainingDay = (date) => {
@@ -62,180 +107,93 @@ export default function BJJGymTracker() {
     }
   };
 
-  const renderExerciseLogger = (exercise) => {
-    const [input, setInput] = useState("");
+  const handleTagSelect = (date, tag) => {
+    const formatted = date.toLocaleDateString();
+    setTags(prev => ({
+      ...prev,
+      [formatted]: tag
+    }));
+  };
+
+  const startRestTimer = (seconds) => {
+    setTimeLeft(seconds);
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+    setRestTimer(timer);
+  };
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+
+  const handleAddCustomExercise = () => {
+    if (!newExercise) return;
+    const updated = [...customExercises, newExercise];
+    setCustomExercises(updated);
+    setNewExercise("");
+  };
+
+  const streakCount = () => {
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    const datesThisWeek = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(weekStart);
+      d.setDate(d.getDate() + i);
+      return d.toLocaleDateString();
+    });
+    return datesThisWeek.filter(date => trainingLog.includes(date)).length;
+  };
+
+  const renderTagControls = (date) => {
     return (
-      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 mt-2">
-        <input
-          type="number"
-          placeholder="kg"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          className="border px-2 py-1 rounded w-24 mb-2 sm:mb-0"
-        />
-        <button
-          onClick={() => {
-            handleExerciseLog(exercise, input);
-            setInput("");
-          }}
-          className="bg-gray-800 text-white px-3 py-1 rounded"
-        >
-          Log
-        </button>
-        {exerciseDemos[exercise] && (
+      <div className="mt-2 flex flex-wrap gap-2">
+        {TAGS.map((tag) => (
           <button
-            onClick={() => setSelectedDemo(exercise)}
-            className="text-sm text-blue-600 underline mt-2 sm:mt-0"
+            key={tag}
+            className="text-xs px-2 py-1 bg-blue-200 rounded"
+            onClick={() => handleTagSelect(date, tag)}
           >
-            ▶ Demo
+            {tag}
           </button>
-        )}
+        ))}
       </div>
     );
   };
 
-  const generateChartData = () => {
-    return {
-      labels: weightEntries.map((entry) => entry.date).reverse(),
-      datasets: [
-        {
-          label: "Bodyweight (kg)",
-          data: weightEntries.map((entry) => entry.weight).reverse(),
-          borderColor: "#1f2937",
-          backgroundColor: "#1f2937",
-        },
-      ],
-    };
-  };
-
-  const generateExerciseChartData = (exercise) => {
-    const logs = (exerciseLogs[exercise] || []).reverse();
-    return {
-      labels: logs.map((log) => log.date),
-      datasets: [
-        {
-          label: `${exercise} (kg)`,
-          data: logs.map((log) => log.weight),
-          borderColor: "#3b82f6",
-          backgroundColor: "#93c5fd",
-        },
-      ],
-    };
-  };
-
   return (
-    <div className="min-h-screen bg-white text-gray-800 font-sans px-4 py-8 md:px-12">
+    <div className={`${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-800'} min-h-screen font-sans px-4 py-8 md:px-12`}>
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-extrabold mb-8 text-center tracking-tight">Jay BJJ</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">Jay BJJ</h1>
+          <button onClick={toggleDarkMode} className="text-sm bg-gray-200 px-3 py-1 rounded hover:bg-gray-300 dark:bg-gray-700 dark:text-white">Toggle Dark Mode</button>
+        </div>
 
-        {selectedDemo && (
-          <div className="mb-8 bg-gray-100 p-4 rounded-xl shadow-md">
-            <h2 className="text-xl font-bold mb-2">{selectedDemo} Demo</h2>
-            <div className="aspect-w-16 aspect-h-9">
-              <iframe
-                className="w-full h-64 md:h-96"
-                src={exerciseDemos[selectedDemo]}
-                title={selectedDemo}
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
-            </div>
-            <button
-              onClick={() => setSelectedDemo(null)}
-              className="mt-4 text-red-500 underline"
-            >
-              Close Demo
-            </button>
-          </div>
-        )}
+        <div className="mb-4">
+          <p className="text-sm font-medium">🔥 Weekly Streak: {streakCount()} training days</p>
+        </div>
 
         <div className="mb-12">
-          <h2 className="text-2xl font-bold mb-4">Training Calendar</h2>
+          <h2 className="text-xl font-bold mb-4">Training Calendar</h2>
           <Calendar
             onChange={(date) => {
               setSelectedDate(date);
               handleTrainingDay(date);
             }}
             value={selectedDate}
+            tileContent={({ date }) => {
+              const formatted = date.toLocaleDateString();
+              const tag = tags[formatted];
+              return tag ? <span className="block text-xs mt-1 text-blue-600">{tag}</span> : null;
+            }}
             tileClassName={({ date }) =>
               trainingLog.includes(date.toLocaleDateString()) ? "bg-blue-100 text-blue-800 font-semibold" : null
             }
           />
+          {renderTagControls(selectedDate)}
         </div>
 
-        <div className="grid gap-10 md:grid-cols-2">
-          <div className="bg-gray-50 p-6 rounded-2xl shadow-md">
-            <h2 className="text-2xl font-bold mb-4">Tuesday - Lower Body</h2>
-            <ul className="list-disc list-inside space-y-2 text-base">
-              <li>Back Squats - 4x5 {renderExerciseLogger("Back Squats")}</li>
-              <li>RDLs - 3x8-10 {renderExerciseLogger("RDLs")}</li>
-              <li>Walking Lunges - 2x20 {renderExerciseLogger("Walking Lunges")}</li>
-              <li>Kettlebell Swings - 3x15 {renderExerciseLogger("Kettlebell Swings")}</li>
-              <li>Woodchoppers/Leg Raises - 3x10-12 {renderExerciseLogger("Core Work")}</li>
-              <li>Planks - 3x45 sec</li>
-            </ul>
-          </div>
-
-          <div className="bg-gray-50 p-6 rounded-2xl shadow-md">
-            <h2 className="text-2xl font-bold mb-4">Friday - Upper Body</h2>
-            <ul className="list-disc list-inside space-y-2 text-base">
-              <li>Pull-Ups/Lat Pulldown - 4x8-10 {renderExerciseLogger("Pull-Ups")}</li>
-              <li>Bench Press - 3x6-8 {renderExerciseLogger("Bench Press")}</li>
-              <li>Rows - 3x10 {renderExerciseLogger("Rows")}</li>
-              <li>Overhead Press - 3x8 {renderExerciseLogger("Overhead Press")}</li>
-              <li>Farmer's Carries - 3x30-40m {renderExerciseLogger("Farmer's Carries")}</li>
-              <li>AMRAP Finisher</li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="mt-12 bg-gray-100 p-6 rounded-2xl shadow-md">
-          <h2 className="text-2xl font-bold mb-4">Weight Tracker</h2>
-          <div className="flex items-center space-x-4 mb-6">
-            <input
-              type="number"
-              value={weightInput}
-              onChange={(e) => setWeightInput(e.target.value)}
-              className="border-2 border-gray-300 px-4 py-2 rounded-lg w-28 focus:outline-none focus:border-blue-500"
-              placeholder="kg"
-            />
-            <button
-              onClick={handleAddWeight}
-              className="bg-black text-white px-5 py-2 rounded-lg hover:bg-gray-800 transition"
-            >
-              Add
-            </button>
-          </div>
-          <ul className="space-y-2 text-sm text-gray-700">
-            {weightEntries.map((entry, idx) => (
-              <li key={idx} className="font-medium">
-                {entry.date}: {entry.weight} kg
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {weightEntries.length > 0 && (
-          <div className="mt-12 bg-gray-100 p-6 rounded-2xl shadow-md">
-            <h2 className="text-2xl font-bold mb-4">Progress Chart</h2>
-            <Line data={generateChartData()} />
-          </div>
-        )}
-
-        {Object.keys(exerciseLogs).length > 0 && (
-          <div className="mt-12 bg-gray-100 p-6 rounded-2xl shadow-md">
-            <h2 className="text-2xl font-bold mb-6">Exercise Progress</h2>
-            <div className="grid gap-6 md:grid-cols-2">
-              {Object.keys(exerciseLogs).map((exercise, idx) => (
-                <div key={idx} className="bg-white p-4 rounded-xl shadow">
-                  <h3 className="text-lg font-semibold mb-2">{exercise}</h3>
-                  <Line data={generateExerciseChartData(exercise)} />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Additional UI rendering here */}
       </div>
     </div>
   );
