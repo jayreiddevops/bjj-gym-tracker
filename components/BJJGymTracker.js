@@ -170,3 +170,7 @@ export default function BJJGymTracker() {
             <p className="text-sm mt-2">Current: {weightEntries[0].weight} kg</p>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
